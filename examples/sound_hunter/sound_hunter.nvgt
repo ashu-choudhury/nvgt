@@ -1,0 +1,182 @@
+// Sound Hunter - Accessible NVGT WebAssembly Demo Game
+// Demonstrates WebAssembly compilation, WebAudio playback, menu navigation, input_box dialog, spatial audio, and screen reader output.
+
+#pragma asset "assets/sonar.ogg"
+#pragma asset "assets/points.ogg"
+#pragma asset "assets/win.ogg"
+
+void play_game(string player_name, sound@ ping_sound, sound@ collect_sound, sound@ win_sound) {
+    int player_x = 0;
+    int min_x = -10;
+    int max_x = 10;
+    int target_x = random(min_x, max_x);
+    if (target_x == player_x) target_x = 5;
+
+    int score = 0;
+    int goal = 5;
+
+    screen_reader_speak("Game started! Welcome " + player_name + ". Use Left and Right Arrow keys to find the sound source, and press Space to collect it. Find " + goal + " items to win! Press Escape to return to menu.", true);
+
+    timer ping_timer;
+
+    while (true) {
+        // Periodic sonar ping indicating target location
+        if (ping_timer.elapsed >= 800) {
+            ping_timer.restart();
+
+            float diff = float(target_x - player_x);
+            // Pan ranges from -100 (hard left) to 100 (hard right)
+            float pan = clamp(diff * 12.0, -100.0, 100.0);
+            float dist = abs(diff);
+            // Volume ranges from 0.0 to 1.0
+            float vol = clamp(1.0 - (dist / 14.0), 0.25, 1.0);
+
+            ping_sound.pan = pan;
+            ping_sound.volume = vol;
+            ping_sound.pitch = 100.0;
+            ping_sound.play();
+        }
+
+        // Move Left
+        if (key_pressed(KEY_LEFT) or key_pressed(KEY_A)) {
+            if (player_x > min_x) {
+                player_x--;
+                screen_reader_speak(string(player_x), true);
+            } else {
+                screen_reader_speak("Left boundary reached: " + player_x, true);
+            }
+        }
+
+        // Move Right
+        if (key_pressed(KEY_RIGHT) or key_pressed(KEY_D)) {
+            if (player_x < max_x) {
+                player_x++;
+                screen_reader_speak(string(player_x), true);
+            } else {
+                screen_reader_speak("Right boundary reached: " + player_x, true);
+            }
+        }
+
+        // Check Position and Status
+        if (key_pressed(KEY_UP) or key_pressed(KEY_C)) {
+            screen_reader_speak(player_name + ", Position: " + player_x + ". Score: " + score + " of " + goal, true);
+        }
+
+        // Collect Item
+        if (key_pressed(KEY_SPACE) or key_pressed(KEY_RETURN)) {
+            if (player_x == target_x) {
+                score++;
+                collect_sound.volume = 1.0;
+                collect_sound.pitch = 100.0;
+                collect_sound.play();
+
+                if (score >= goal) {
+                    win_sound.volume = 1.0;
+                    win_sound.pitch = 100.0;
+                    win_sound.play();
+                    screen_reader_speak("Congratulations " + player_name + "! You found all items and won the game! Final score: " + score + ". Press Enter or Escape to return to menu.", true);
+                    while (!key_pressed(KEY_ESCAPE) and !key_pressed(KEY_RETURN) and !key_pressed(KEY_SPACE)) {
+                        wait(10);
+                    }
+                    break;
+                } else {
+                    screen_reader_speak("Item collected! Score: " + score + ". Finding next location...", true);
+                    // Spawn next target
+                    int next_x = random(min_x, max_x);
+                    while (next_x == player_x) {
+                        next_x = random(min_x, max_x);
+                    }
+                    target_x = next_x;
+                    ping_timer.restart();
+                }
+            } else {
+                int dist = abs(target_x - player_x);
+                screen_reader_speak("Nothing here! Target is " + dist + " steps away.", true);
+            }
+        }
+
+        // Exit to menu
+        if (key_pressed(KEY_ESCAPE)) {
+            screen_reader_speak("Returning to main menu.", true);
+            wait(200);
+            break;
+        }
+
+        wait(5);
+    }
+}
+
+void main() {
+    show_window("Sound Hunter - NVGT Web Demo");
+
+    sound ping_sound;
+    sound collect_sound;
+    sound win_sound;
+
+    ping_sound.load("assets/sonar.ogg");
+    collect_sound.load("assets/points.ogg");
+    win_sound.load("assets/win.ogg");
+
+    int menu_index = 0;
+    string[] menu_items = {"Start Game", "Exit"};
+
+    screen_reader_speak("Sound Hunter Main Menu. Start Game. 1 of 2. Use Up and Down arrow keys to navigate, and press Enter to select.", true);
+
+    while (true) {
+        // Menu Up
+        if (key_pressed(KEY_UP)) {
+            if (menu_index > 0) {
+                menu_index--;
+                ping_sound.pitch = 120.0;
+                ping_sound.pan = 0.0;
+                ping_sound.volume = 0.8;
+                ping_sound.play();
+                screen_reader_speak(menu_items[menu_index] + ". " + (menu_index + 1) + " of " + menu_items.length(), true);
+            }
+        }
+
+        // Menu Down
+        if (key_pressed(KEY_DOWN)) {
+            if (menu_index < int(menu_items.length()) - 1) {
+                menu_index++;
+                ping_sound.pitch = 85.0;
+                ping_sound.pan = 0.0;
+                ping_sound.volume = 0.8;
+                ping_sound.play();
+                screen_reader_speak(menu_items[menu_index] + ". " + (menu_index + 1) + " of " + menu_items.length(), true);
+            }
+        }
+
+        // Select Option
+        if (key_pressed(KEY_RETURN) or key_pressed(KEY_SPACE)) {
+            if (menu_index == 0) {
+                collect_sound.pitch = 110.0;
+                collect_sound.play();
+
+                string player_name = input_box("Sound Hunter", "Please enter your name:", "Hunter");
+                if (player_name == "") {
+                    player_name = "Hunter";
+                }
+
+                play_game(player_name, ping_sound, collect_sound, win_sound);
+
+                // When returning from game, re-announce menu
+                screen_reader_speak("Main Menu. " + menu_items[menu_index] + ". " + (menu_index + 1) + " of " + menu_items.length(), true);
+            } else if (menu_index == 1) {
+                // Exit
+                screen_reader_speak("Exiting game. Goodbye!", true);
+                wait(200);
+                exit(0);
+            }
+        }
+
+        // Escape to Exit
+        if (key_pressed(KEY_ESCAPE)) {
+            screen_reader_speak("Exiting game. Goodbye!", true);
+            wait(200);
+            exit(0);
+        }
+
+        wait(5);
+    }
+}

@@ -28,6 +28,9 @@
 	#include <jni.h>
 	#include <stdexcept>
 	#include "android.h"
+#elif defined(__EMSCRIPTEN__)
+	#include <emscripten.h>
+	#include "web.h"
 #else
 	// Following commented includes are for determining user idle time using x11 screensaver extension. Disabled for now until viability of linking with this library is established or until we fix the idle_ticks() function to use dlopen/dlsym and friends.
 	//#include <X11/Xlib.h>
@@ -482,6 +485,15 @@ void refresh_window() {
 	}
 }
 void wait(int ms) {
+#ifdef __EMSCRIPTEN__
+	anticheat_check();
+	if (g_GCMode == 2)
+		garbage_collect_action();
+	SDL_PumpEvents();
+	emscripten_sleep(ms > 0 ? ms : 0);
+	SDL_PumpEvents();
+	refresh_window();
+#else
 	anticheat_check();
 	if (!g_window || g_WindowThreadId != thread_current_thread_id()) {
 		Poco::Thread::sleep(ms);
@@ -497,6 +509,7 @@ void wait(int ms) {
 		if (ms < 1) break;
 	}
 	refresh_window();
+#endif
 }
 
 // The following function contributed to NVGT by silak

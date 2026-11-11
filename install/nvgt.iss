@@ -72,6 +72,9 @@
 		name: "stubs\android"; description: "Android binary stub"; types: custom
 		name: "androidtools"; description: "Android tools (external download required)"; types: custom
 	#endif
+	#ifdef have_web_stubs
+		name: "stubs\web"; description: "WebAssembly binary stub"; types: custom
+	#endif
 	#ifdef have_docs
 		name: "docs"; description: "Documentation"; types: custom
 	#else
@@ -115,6 +118,9 @@
 	#ifdef have_ios_stubs
 		source: "release\stub\nvgt_ios*.bin"; DestDir: "{app}\stub"; components: stubs\ios
 	#endif
+	#ifdef have_web_stubs
+		source: "release\stub\nvgt_web.bin"; DestDir: "{app}\stub"; components: stubs\web
+	#endif
 	; Includes
 	source: "release\include\*.nvgt"; DestDir: "{app}\include"; components: includes
 	#ifdef have_docs
@@ -157,6 +163,10 @@
 		root: HKA; subkey: "software\classes\NVGTScript\shell\compile\shell\ios_debug\command"; ValueType: string; ValueName: ""; ValueData: "{app}\nvgtw.exe -pios -C ""%L"""; components: associate
 		root: HKA; subkey: "software\classes\NVGTScript\shell\compile\shell\ios_release"; ValueType: string; ValueName: ""; ValueData: "iOS (Release)"; components: associate
 		root: HKA; subkey: "software\classes\NVGTScript\shell\compile\shell\ios_release\command"; ValueType: string; ValueName: ""; ValueData: "{app}\nvgtw.exe -pios -c ""%L"""; components: associate
+	#endif
+	#ifdef have_web_stubs
+		root: HKA; subkey: "software\classes\NVGTScript\shell\compile\shell\web_release"; ValueType: string; ValueName: ""; ValueData: "WebAssembly (Release)"; components: associate
+		root: HKA; subkey: "software\classes\NVGTScript\shell\compile\shell\web_release\command"; ValueType: string; ValueName: ""; ValueData: "{app}\nvgtw.exe -pweb -c ""%L"""; components: associate
 	#endif
 	Root: HKA; subkey: "software\classes\NVGTScript\shell\edit"; ValueType: string; ValueName: ""; ValueData: "Edit Script"; components: associate
 	Root: HKA; subkey: "software\classes\NVGTScript\shell\edit\command"; ValueType: string; ValueName: ""; ValueData: """notepad"" ""%L"""; components: associate

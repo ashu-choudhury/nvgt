@@ -631,6 +631,7 @@ int CompileScript(asIScriptEngine *engine, const string &scriptFile) {
 		return -1;
 	if (g_platform != "auto") builder.DefineWord(g_platform.c_str());
 	if (g_platform == "ios" || g_platform == "android") builder.DefineWord("mobile");
+	else if (g_platform == "web") builder.DefineWord("web");
 	else builder.DefineWord("desktop");
 	asIScriptModule *mod = builder.GetModule();
 	if (mod)

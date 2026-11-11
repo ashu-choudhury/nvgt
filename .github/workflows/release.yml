@@ -245,6 +245,24 @@ jobs:
         name: windows_release
         path: 'release'
 
+  web_build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        submodules: true
+    - uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: 3.1.56
+    - name: build web runtime stub
+      run: |
+        python3 build_web_runtime.py
+        python3 build/makestub_web.py build/web/nvgt.wasm build/web/nvgt.js
+    - uses: actions/upload-artifact@v7
+      with:
+        name: web_release
+        path: 'release'
+
   cleanup_config:
     runs-on: ubuntu-latest
     needs: [generate_config, mac_build, linux_build, android_build, windows_build]
@@ -259,7 +277,7 @@ jobs:
 
   windows_package:
     runs-on: windows-2022
-    needs: ["android_build", "linux_build", "mac_build", "windows_build"]
+    needs: ["android_build", "linux_build", "mac_build", "windows_build", "web_build"]
     steps:
     - uses: actions/checkout@v5
     - uses: actions/download-artifact@v8
@@ -283,6 +301,7 @@ jobs:
         cp linux_release/stub/* release/stub
         cp -r mac_release/lib release/lib_mac
         cp mac_release/stub/* release/stub
+        if [ -d "web_release/stub" ]; then cp web_release/stub/* release/stub; fi
         cd install
         iscc nvgt.iss
         cd ..

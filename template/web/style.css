@@ -1,0 +1,201 @@
+/* style.css - NVGT Web Player Theme (Audiogame Pure Black) */
+:root {
+  --bg-color: #000000;
+  --surface-color: #000000;
+  --surface-border: #111111;
+  --text-main: #f3f4f6;
+  --text-muted: #888888;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #000000;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  user-select: none;
+}
+
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Pure Black Splash Overlay for WebAudio Autoplay Unlock */
+#splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: #000000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+#splash-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#game-banner {
+  max-width: 80%;
+  max-height: 60%;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game-banner.hidden {
+  display: none;
+}
+
+#cover-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.visual-hint {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: monospace;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* Main Game Container */
+#game-container {
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+#canvas-wrapper {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#canvas {
+  width: 100%;
+  height: 100%;
+  background-color: #000000;
+  outline: none;
+  display: block;
+}
+
+/* Status text (hidden unless error) */
+#status-bar {
+  display: none;
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(20, 20, 20, 0.9);
+  color: #aaa;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+/* Mobile Touch Controls */
+.touch-only {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .touch-only {
+    display: flex;
+  }
+}
+
+#mobile-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.dpad, .action-buttons {
+  pointer-events: auto;
+}
+
+.dpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dpad-middle {
+  display: flex;
+  gap: 40px;
+}
+
+.dpad-btn, .action-btn {
+  width: 56px;
+  height: 56px;
+  background-color: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.action-enter {
+  font-size: 0.8rem;
+  font-weight: bold;
+}

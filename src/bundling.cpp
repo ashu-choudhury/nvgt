@@ -206,7 +206,6 @@ static set<string> build_exec_paths(const string& main_exec, const string& asset
 class nvgt_compilation_output_impl : public virtual nvgt_compilation_output {
 	string platform, stub, input_file, output_file;
 	string stub_location, error_text, status_text;
-	UInt64 stub_size;
 	Path outpath;
 	Mutex status_text_mtx;
 	void error(const exception& exc, const std::string& error) {
@@ -299,6 +298,7 @@ public:
 			nvgt_compile_message_box("Success!", format("%s build succeeded in %?ums, saved to %s", string(g_debug ? "Debug" : "Release"), Util::Application::instance().uptime().totalMilliseconds(), output_file), {"`OK"});
 	}
 protected:
+	UInt64 stub_size;
 	FileStream fs;
 	Util::LayeredConfiguration& config;
 	string make_product_id() {
@@ -944,6 +944,92 @@ protected:
 		nvgt_compile_message_box("Success!", format("The application %s (%s) was installed on %s in %ums.", config.getString("build.product_name"), config.getString("build.product_identifier"), install_device_name, uint32_t(install_clock.elapsed() / 1000)), {"`OK"});
 	}
 };
+class nvgt_compilation_output_web : public nvgt_compilation_output_impl {
+	SharedPtr<File> workplace_tmp;
+	File workplace;
+	Path final_output_path;
+	int bundle_mode;
+	using nvgt_compilation_output_impl::nvgt_compilation_output_impl;
+protected:
+	void alter_output_path(Path& output_path) override {
+		bundle_mode = config.getInt("build.web_bundle", 3); // 0/1 folder, 2 zip only, 3 both folder and zip.
+		final_output_path = output_path;
+		final_output_path.setFileName(output_path.getBaseName() + "_web");
+		if (bundle_mode == 2) {
+			workplace_tmp = new TemporaryFile();
+			workplace = *workplace_tmp;
+		} else {
+			workplace = final_output_path;
+		}
+		workplace.createDirectories();
+		output_path = Path(workplace.path()).append("game.bin");
+	}
+	void copy_stub(const Path& stubpath, const Path& outpath) override {
+		set_status("extracting web runtime...");
+		if (File(stubpath).exists()) {
+			libarchive_extract(stubpath.toString(), workplace.path());
+		} else {
+			// Check development or fallback template locations
+			Path dev_tpl = Path(Util::Application::instance().commandPath()).makeParent().append("template/web");
+			if (!File(dev_tpl).exists()) dev_tpl = Path(Util::Application::instance().commandPath()).makeParent().append("../template/web");
+			if (File(dev_tpl).exists()) {
+				File(dev_tpl).copyTo(workplace.path());
+			}
+		}
+	}
+	void open_output_stream(const Path& output_path) override {
+		fs.open(output_path.toString(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+		stub_size = 0;
+	}
+	void finalize_output_stream() override {
+		BinaryWriter(fs) << int(0);
+	}
+	void finalize_product(Path& output_path) override {
+		set_status("customizing web package...");
+		string index_path = Path(workplace.path()).append("index.html").toString();
+		if (File(index_path).exists()) {
+			string product_name = config.getString("build.product_name", Path(get_input_file()).getBaseName());
+			string product_id = config.getString("build.product_identifier", make_product_id());
+			string web_proxy = config.getString("build.web_proxy", "");
+			string html_content;
+			try {
+				FileInputStream fis(index_path);
+				StreamCopier::copyToString(fis, html_content);
+				fis.close();
+				replaceInPlace(html_content, "%PRODUCT_NAME%"s, product_name);
+				replaceInPlace(html_content, "%PRODUCT_IDENTIFIER%"s, product_id);
+				replaceInPlace(html_content, "%WEB_PROXY%"s, web_proxy);
+				FileOutputStream fos(index_path);
+				fos.write(html_content.data(), html_content.size());
+				fos.close();
+			} catch (...) {}
+		}
+		bundle_assets(workplace.path(), workplace.path());
+		string web_lib_src = get_nvgt_lib_directory("web");
+		if (File(web_lib_src).exists()) {
+			std::vector<std::string> lib_files;
+			File(web_lib_src).list(lib_files);
+			if (!lib_files.empty()) {
+				copy_shared_libraries(Path(workplace.path()).append("lib"));
+			}
+		}
+
+		if (bundle_mode > 1) {
+			set_status("packaging web archive (.zip)...");
+			File zip_out = Path(final_output_path.parent()).append(final_output_path.getFileName() + ".zip").toString();
+			struct archive* a = archive_write_new();
+			archive_write_set_format_zip(a);
+			archive_write_zip_set_compression_deflate(a);
+			archive_write_open_filename(a, zip_out.path().c_str());
+			archive_write_dir(a, workplace.path(), "", {}, {}, true);
+			archive_write_close(a);
+			archive_write_free(a);
+			output_path = bundle_mode == 2 ? zip_out.path() : workplace.path();
+		} else {
+			output_path = workplace.path();
+		}
+	}
+};
 nvgt_compilation_output* nvgt_init_compilation(const string& input_file, bool auto_prepare) {
 	nvgt_compilation_output* output;
 	if (g_platform == "windows") output = new nvgt_compilation_output_windows(input_file);
@@ -951,6 +1037,7 @@ nvgt_compilation_output* nvgt_init_compilation(const string& input_file, bool au
 	else if (g_platform == "linux") output = new nvgt_compilation_output_linux(input_file);
 	else if (g_platform == "android") output = new nvgt_compilation_output_android(input_file);
 	else if (g_platform == "ios") output = new nvgt_compilation_output_ios(input_file);
+	else if (g_platform == "web") output = new nvgt_compilation_output_web(input_file);
 	else output = new nvgt_compilation_output_impl(input_file);
 	
 	// Ensure stubs can be found in development environments.

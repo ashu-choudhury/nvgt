@@ -19,6 +19,8 @@
 #include "apple.h"
 #elif defined(_WIN32)
 #include "win.h"
+#elif defined(__EMSCRIPTEN__)
+#include "web.h"
 #endif
 
 class asIScriptEngine;

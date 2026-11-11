@@ -10,12 +10,16 @@
 *.o
 *.os
 *.dylib
+*.wasm
 __pycache__
 
 # other intermediet build
 build/config.log
 build/lastbuild
 build/windev_path
+build/angelscript/
+build/web/nvgt.js
+build/web/nvgt.wasm
 src/version.cpp
 .sconf_temp
 .sconsign.dblite
@@ -28,6 +32,7 @@ libs
 obj
 release/lib/3rd_party_licenses.html
 release/lib_*
+examples/**/sound_hunter_web/
 
 # private user space and dependencies
 user/**

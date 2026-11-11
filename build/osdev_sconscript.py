@@ -8,7 +8,7 @@ Import("env")
 
 def get_platform():
 	target = ARGUMENTS.get("target", "")
-	valid_targets = {"windows", "macos", "linux", "android", "ios"}
+	valid_targets = {"windows", "macos", "linux", "android", "ios", "web"}
 	if target in valid_targets:
 		return target
 	platform_map = {"win32": "windows", "darwin": "macos", "posix": "linux"}
@@ -24,6 +24,7 @@ prefix = ""
 if env["NVGT_TARGET"] == "windows": prefix = "win"
 elif env["NVGT_TARGET"] == "linux": prefix = "lin"
 elif env["NVGT_TARGET"] == "android": prefix = "droi"
+elif env["NVGT_TARGET"] == "web": prefix = "web"
 else: prefix = env["NVGT_TARGET"]
 env["NVGT_OSDEV_NAME"] = prefix + "dev"
 

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>%PRODUCT_NAME%</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+  <meta name="nvgt-product-id" content="%PRODUCT_IDENTIFIER%" />
+  <meta name="nvgt-web-proxy" content="%WEB_PROXY%" />
+</head>
+<body>
+  <!-- Accessible hidden live region for screen readers (NVDA, JAWS, VoiceOver, Orca, Narrator) -->
+  <div id="nvgt-speaker" class="sr-only" aria-live="assertive" aria-atomic="true" role="alert"></div>
+
+  <!-- Pure Black Audiogame Stage & Autoplay Unlocker -->
+  <div id="splash-overlay" tabindex="0" role="button" aria-label="Please enter to start the game.">
+    <!-- Optional game cover / logo if provided by developer -->
+    <div id="game-banner" class="hidden">
+      <img id="cover-image" src="cover.png" alt="%PRODUCT_NAME%" onerror="this.parentElement.classList.add('hidden')" onload="this.parentElement.classList.remove('hidden')" />
+    </div>
+    <div id="splash-prompt" class="subtle-prompt">
+      <span class="sr-only">Please enter to start the game.</span>
+      <span class="visual-hint" aria-hidden="true">Press Enter to Start</span>
+    </div>
+  </div>
+
+  <!-- Main Game Container -->
+  <main id="game-container" role="main" aria-label="%PRODUCT_NAME%">
+    <!-- Canvas area for visual rendering and keyboard capture -->
+    <div id="canvas-wrapper">
+      <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="0" aria-label="Game Screen"></canvas>
+    </div>
+
+    <!-- On-screen controls for mobile touch users -->
+    <div id="mobile-controls" class="touch-only" aria-hidden="true">
+      <div class="dpad">
+        <button class="dpad-btn dpad-up" data-key="ArrowUp" aria-label="Up">▲</button>
+        <div class="dpad-middle">
+          <button class="dpad-btn dpad-left" data-key="ArrowLeft" aria-label="Left">◀</button>
+          <div class="dpad-center"></div>
+          <button class="dpad-btn dpad-right" data-key="ArrowRight" aria-label="Right">▶</button>
+        </div>
+        <button class="dpad-btn dpad-down" data-key="ArrowDown" aria-label="Down">▼</button>
+      </div>
+      <div class="action-buttons">
+        <button class="action-btn action-b" data-key="Escape" aria-label="Back / Escape">ESC</button>
+        <button class="action-btn action-a" data-key="Space" aria-label="Action / Space">SPACE</button>
+        <button class="action-btn action-enter" data-key="Enter" aria-label="Enter">ENTER</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Status / Loading Indicator -->
+  <div id="status-bar" aria-live="polite">
+    <span id="status-text"></span>
+  </div>
+
+  <!-- Runtime Bridge Scripts -->
+  <script src="nvgt_bridge.js"></script>
+  <script async src="nvgt.js"></script>
+</body>
+</html>

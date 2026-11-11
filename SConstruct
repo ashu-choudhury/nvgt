@@ -117,6 +117,7 @@ if env["NVGT_TARGET"] != "android" and "android.cpp" in sources:
 	sources.remove("android.cpp")
 if env["NVGT_TARGET"] != "windows" and "win.cpp" in sources: sources.remove("win.cpp")
 if env["NVGT_TARGET"] != "linux" and "linux.cpp" in sources: sources.remove("linux.cpp")
+if env["NVGT_TARGET"] != "web" and "web.cpp" in sources: sources.remove("web.cpp")
 if "version.cpp" in sources: sources.remove("version.cpp")
 env.Command(target = "src/version.cpp", source = ["src/" + i for i in sources], action = env["generate_version"])
 version_object = env.Object("build/obj_src/version", "src/version.cpp") # Things get weird if we do this after VariantDir.
@@ -246,6 +247,9 @@ if ARGUMENTS.get("no_stubs", "0") == "0" and env["NVGT_TARGET"] not in ("android
 				stub_nc_u = stub_env.UPX(f"release/stub/nvgt_{stub_platform}_nc_upx.bin", stub_nc)
 				stub_env.AddPostAction(stub_nc_u, fix_stub)
 				env.Install("c:/nvgt/stub", stub_nc_u)
+	if os.path.exists("release/stub/nvgt_web.bin") and env["NVGT_TARGET"] == "windows":
+		env.Install("c:/nvgt/stub", "release/stub/nvgt_web.bin")
+
 
 if ARGUMENTS.get("copylibs", "1") == "1":
 	env["NVGT_OSDEV_COPY_LIBS"](env)

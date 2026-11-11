@@ -32,6 +32,22 @@
 
 using namespace std;
 
+// Compatibility shim for MSVC STL vectorized string operations referenced by precompiled PocoNet.lib
+extern "C" size_t __cdecl __std_find_first_not_of_trivial_pos_1(const char* haystack, size_t haystack_size, const char* needle, size_t needle_size) {
+	for (size_t i = 0; i < haystack_size; ++i) {
+		char c = haystack[i];
+		bool found = false;
+		for (size_t j = 0; j < needle_size; ++j) {
+			if (needle[j] == c) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) return i;
+	}
+	return static_cast<size_t>(-1);
+}
+
 void register_native_tts() { tts_engine_register("sapi5", []() -> shared_ptr<tts_engine> { return make_shared<sapi5_engine>(); }); }
 
 sapi5_engine::sapi5_engine() : tts_engine_impl("SAPI5") {

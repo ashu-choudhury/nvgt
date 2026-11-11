@@ -43,6 +43,8 @@ void determine_compile_platform() {
 	if (g_platform != "auto") return;
 	#ifdef _WIN32
 	g_platform = "windows";
+	#elif defined(__EMSCRIPTEN__)
+	g_platform = "web";
 	#elif defined(__linux__)
 	g_platform = "linux";
 	#elif defined(__APPLE__)
@@ -65,6 +67,7 @@ std::string get_nvgt_lib_directory(const std::string& platform) {
 	else if (platform == "mac") dir = Environment::os() == POCO_OS_MAC_OS_X? (apple_bundle? "Frameworks" : "lib") : "lib_mac";
 	else if (platform == "linux") dir = Poco::Environment::os() == POCO_OS_LINUX? "lib" : "lib_linux";
 	else if (platform == "android") dir = "lib_android";
+	else if (platform == "web") dir = "lib_web";
 	else return ""; // libs not applicable for this platform.
 	Path result(Path::self());
 	result.makeParent();
@@ -80,7 +83,9 @@ std::string get_nvgt_lib_directory(const std::string& platform) {
 #else // NVGT_STUB
 std::string get_data_location() {
 	std::string executable = Poco::Util::Application::instance().commandPath();
-	#if defined(__ANDROID__)
+	#if defined(__EMSCRIPTEN__)
+	return "game.bin";
+	#elif defined(__ANDROID__)
 	return android_get_main_shared_object();
 	#elif defined(__APPLE__)
 		#ifndef NVGT_MOBILE
